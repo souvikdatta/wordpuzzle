@@ -69,7 +69,6 @@ void CWordPuzzle::startGame()
     // m_DB->printDB();
 
     //getchar();
-
     m_GameEngine->startGameEngine(m_Menu, m_DB);   
 
 }

@@ -15,71 +15,54 @@
 using namespace std;
 static volatile bool done = false;
 
+constexpr int penaltyEasy = -5;
+constexpr int penaltyMedium = -10;
+constexpr int penaltyHard = -15;
+constexpr int scoreEasy = 5;
+constexpr int scoreMedium = 10;
+constexpr int scoreHard = 15;
+
 class CMenu;
 class CDatabase;
 class CGameEngine
 {
 private:
     int m_diffLevel{static_cast<int>(EASY)};
-    void startWordGame(std::shared_ptr<CDatabase> db);
+    int m_score{0};
+    void startWordGame(std::shared_ptr<CMenu> menu, std::shared_ptr<CDatabase> db);
+    void updateScore(bool success);
+
 public:
     void startGameEngine(std::shared_ptr<CMenu> menu, std::shared_ptr<CDatabase> db);
-    void delay(int delayInMS);
     virtual ~CGameEngine(){}
 };
-#if 0
-std::string readStdIn()
-{
-    struct pollfd pfd = { STDIN_FILENO, POLLIN, 0 };
 
-    std::string line;
-    int ret = 0;
-    while(ret == 0)
+void CGameEngine::updateScore(bool success)
+{
+    int i, j;
+    switch(m_diffLevel)
     {
-        ret = poll(&pfd, 1, 1000);  // timeout of 1000ms
-        if(ret == 1) // there is something to read
-        {
-            std::getline(std::cin, line);
-            transform(response.begin(), response.end(), response.begin(), ::toupper);
-            if(!key.compare(response))
-                cout << " BINGO :) !! " << endl;
-            else
-                cout << "Sorry Wrong guess :( !!" << endl;
-            
-            cout << "Hit any key to go to main menu" << endl;
-            done = true;
-            getchar();
-            getchar();
-        }
-        else if(ret == -1)
-        {
-            std::cout << "Sorry time out !!: " std::endl;
-        }
-    }
-    return line;
-}
-#endif
-#if 0
-void getInput (string key)
-{
-    string response;
-    cin >> response;
-    //Update the volatile flag
-    //Compare the answer
-    transform(response.begin(), response.end(), response.begin(), ::toupper);
-    if(!key.compare(response))
-        cout << " BINGO :) !! " << endl;
-    else
-        cout << "Sorry Wrong guess :( !!" << endl;
-    
-    cout << "Hit any key to go to main menu" << endl;
-    done = true;
-    getchar();
-    getchar();
-}
-#endif
+        case EASY:
+                i = penaltyEasy;
+                j = scoreEasy;
+            break;
+        case MEDIUM:
+                i = penaltyMedium;
+                j = scoreMedium;            
+            break;
+        case HARD:
+                i = penaltyHard;
+                j = scoreHard;        
+            break;
 
-void CGameEngine::startWordGame(std::shared_ptr<CDatabase> dbPtr)
+    }
+    if(true == success)
+        m_score += j;
+    else
+        m_score += i ;
+}
+
+void CGameEngine::startWordGame(std::shared_ptr<CMenu> menu, std::shared_ptr<CDatabase> dbPtr)
 {
     
     //cout << "Inside Start Word Game" << endl;
@@ -108,6 +91,7 @@ void CGameEngine::startWordGame(std::shared_ptr<CDatabase> dbPtr)
     transform(key.begin(), key.end(), key.begin(), ::toupper);
     getchar(); 
     system("clear");
+    menu->showScore(m_score);
     cout << "************************************************" << endl;
     cout << "Idenify this word (within 10 secs):" << value << endl;
     cout << "************************************************" << endl;
@@ -118,30 +102,39 @@ void CGameEngine::startWordGame(std::shared_ptr<CDatabase> dbPtr)
 
     std::string line;
     int ret = 0;
-    bool done = false;
+    bool success = false;
+    bool inputGiven = false;
     while(ret == 0)
     {
         ret = poll(&pfd, 1, 10000);  // timeout of 1000ms
         if(ret == 1) // there is something to read
         {
-            done = true;
+            inputGiven = true;
             std::getline(std::cin, response);
             transform(response.begin(), response.end(), response.begin(), ::toupper);
             if(!key.compare(response))
             {
+                success = true;
+                updateScore(success);
+                menu->showScore(m_score);
+                system("clear");
                 cout << "\n";
                 cout << "* * * * *  * *\n";
-                cout << "WELL DONE :) !!\a\a" << endl;
+                cout << "WELL DONE !!\a\a" << endl;
                 cout << "* * * * *  * *\n";
                 cout << "\n";
             }
             else
             {
+                //inputGiven = false;
+                system("clear");
+                updateScore(success);
                 cout << "\n";    
-                cout << "Sorry, Wrong guess :(!!" << endl;
+                cout << "Sorry, Wrong guess :(" << endl;
                 std::cout << "-------------------" << endl;
                 std::cout << "Solution:" << key << endl;
                 std::cout << "-------------------" << endl;                    
+                cout << "Better luck next time :)" << endl;
             }
 
             cout << "Hit any key to go to main menu ..." << endl;
@@ -150,54 +143,24 @@ void CGameEngine::startWordGame(std::shared_ptr<CDatabase> dbPtr)
         break;
     }    
 
-    if(done == false)
+    
+
+    if(inputGiven == false)
     {
+        //success = false;
         system("clear");
-        std::cout << "Sorry timed out !!" << endl;
+        menu->showScore(m_score);
+        cout << "\n";
+        std::cout << " ** SORRY TIME OUT !!\a **" << endl;
         cout << "\n";
         std::cout << "-------------------" << endl;
-        std::cout << "Solution:" << key << endl;
+        std::cout << " Solution : " << key << endl;
         std::cout << "-------------------" << endl;
         cout << "\n";
-        cout << "Hit any key to go to main menu" << endl;
+        cout << "Hit any key to go to main menu ..." << endl;
         fflush(stdout);
         getchar();
     }
-
-#if 0
-    //Take this input in a separatet thread context and in paralle start a beep time
-    std::thread getUserInputThread( getInput, key);
-    //Start "Dong thread"
-    for(int i=0; i<10; i++)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        cout << "\a";
-        fflush(stdout);
-        if(done == true)
-            break;
-    }
-
-    if(false == done)
-    {
-        cout << "Sorry Time out !!" << endl;
-        //getchar();
-    }
-#endif
-
-
-    // std::thread::native_handle_type th = getUserInputThread.native_handle();
-    // getUserInputThread.detach();
-    // //Native thread Cancel
-    // pthread_cancel(th);
-}
-
-void CGameEngine::delay(int delayInMS)
-{
-    clock_t start = clock();
-
-    while(clock() < delayInMS + start);
-
-    return;
 }
 
 void CGameEngine::startGameEngine(std::shared_ptr<CMenu> menu, std::shared_ptr<CDatabase> db)
@@ -238,18 +201,29 @@ void CGameEngine::startGameEngine(std::shared_ptr<CMenu> menu, std::shared_ptr<C
             case 2:
                     // cout << "About to call startWordGame()" << endl;
                     // getchar();
-                    startWordGame(db);
+                    startWordGame(menu, db);
                     choice = -1;
                     break;
                 break;
             case 3:
-
-            case 4:
-                    cout << "Thank you and Good Bye !!" << "\n";
+                    system("clear");
+                    cout << "\n";
+                    cout << "****************************" << "\n";
+                    cout << "*                          *" << "\n";
+                    cout << "*  Thank you and Good Bye  *" << "\n";
+                    cout << "*                          *" << "\n";
+                    cout << "*  - Souvik                *" << "\n";
+                    cout << "*                          *" << "\n";
+                    cout << "****************************" << "\n";
+                    cout << "\n";
                     loop = 0;
                     break;  
             default:
                 system("clear");
+                if(0 == choice)
+                    menu->showWelcomeBanner();
+                else
+                    menu->showScore(m_score);
                 menu->showMainMenu(static_cast<difficultyLevels_e>(m_diffLevel));
                 while(1)
                 {

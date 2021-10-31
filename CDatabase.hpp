@@ -36,9 +36,9 @@ int CDatabase::prepareDb(string nameOfFileWithWordList, difficultyLevels_e diffL
             obsStr = str;
             //obscure the string and store it as a value
             srand(time(NULL));
-            for(int k=0; k<10; k++)
+            #if 0
+            for(int k=0; k<50; k++)
             {
-               
                 i = rand() % (obsStr.size()-1);                   
                 temp = obsStr[i];
                 j = rand() % (obsStr.size()-1); 
@@ -53,6 +53,9 @@ int CDatabase::prepareDb(string nameOfFileWithWordList, difficultyLevels_e diffL
                 //std::swap(obsStr[i],obsStr[j]);
                 //cout << obsStr << endl;
             }
+            #endif
+            std::random_shuffle (obsStr.begin(), obsStr.end());
+            //Ignore that key
             if(str.compare(obsStr) != 0)
                 db[diffLevel].insert(std::pair<string, string>(str,obsStr));
         }
