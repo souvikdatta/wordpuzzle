@@ -64,12 +64,18 @@ void CMenu::showMainMenu(difficultyLevels_e currDiffLevel)
 int CMenu::getChoice() 
 {   
     string choice;
+    const char *c;
+    int retStatus = -1;
     while(choice.length() != 1)
     {
         cout << "Enter choice:"; 
         cin >> choice;
     }
-    return stoi(choice);
+    //Keep a check whether value entered is a digit or not?    
+    if(isdigit(*choice.c_str()))
+        retStatus = stoi(choice);
+    
+    return retStatus;
 }
 
 #endif

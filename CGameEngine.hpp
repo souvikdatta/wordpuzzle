@@ -149,6 +149,7 @@ void CGameEngine::startWordGame(std::shared_ptr<CMenu> menu, std::shared_ptr<CDa
     {
         //success = false;
         system("clear");
+        updateScore(success);
         menu->showScore(m_score);
         cout << "\n";
         std::cout << " ** SORRY TIME OUT !!\a **" << endl;

@@ -1,5 +1,6 @@
 #ifndef __COMMON_HPP__
 #define __COMMON_HPP__
+#include <ctype.h>
 typedef enum
 {
     EASY = 0,
